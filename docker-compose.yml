@@ -1,4 +1,29 @@
 services:
+  postgres:
+    container_name: postgres-sql-etp
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Avond778@
+      PGDATA: /var/lib/postgresql/data
+      POSTGRES_DB: event-ticket-platform
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - 5432:5432
+    networks:
+      - spring-demo
+    restart: unless-stopped
+
+#  mail-dev:
+#    container_name: mail-dev-shs
+#    image: maildev/maildev
+#    ports:
+#      - 1080:1080
+#      - 1025:1025
+#    networks:
+#      - spring-demo
+
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     ports:
@@ -8,25 +33,18 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin
     volumes:
       - keycloak-data:/opt/keycloak/data
+    networks:
+      - spring-demo
     command:
       - start-dev
       - --db=dev-file
 
-  db:
-    image: postgres:latest
-    ports:
-      - "5432:5432"
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: changeinprod!
-      POSTGRES_USER: tickets
-      POSTGRES_DB: event-tickets
+networks:
+  spring-demo:
+    driver: bridge
 
-  adminer:
-    image: adminer:latest
-    restart: always
-    ports:
-      - 8888:8080
 volumes:
+  postgres:
+    driver: local
   keycloak-data:
     driver: local
