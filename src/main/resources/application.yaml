@@ -3,34 +3,24 @@ spring:
     name: tickets
 
   # Database connections
-  spring:
-    datasource:
-      url: jdbc:postgres://localhost:5432/event-tickets
-      username: tickets
-      password: changeinprod!
+  datasource:
+    url: jdbc:postgresql://localhost:5432/event-ticket-platform
+    username: postgres
+    password: Avond778@
+    driver-class-name: org.postgresql.Driver
 
-    jpa:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
       hibernate:
-        ddl-auto: update
-      show-sql: true
-      properties:
-        hibernate:
-          format_sql: true
-        dialect: org.hibernate.dialect.PostgrSQLDrialect
-    keycloak:
-      image: quay.io/keycloak/keycloak:latest
-      ports:
-        - "9090:8080"
-      environment:
-        KEYCLOACK_ADMIN: admin
-        KEYCLOACK_ADMIN_PASSWORD: admin
-      volumes:
-        - keycloak-data:/opt/keycloak/data
-      command:
-        - start-dev
-        - --db=dev-file
-    security:
-      oauth2.resourceserver.jwt.issuer-uri=http//localhost:9090/realms/event-ticket-platform
-volumes:
-  keycloak-data:
-    driver: local
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/event-ticket-platform
+          jwk-set-uri: http://localhost:9090/realms/event-ticket-platform/protocol/openid-connect/certs
