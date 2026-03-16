@@ -3,7 +3,7 @@ package com.alsaineybarry.tickets.services.impl;
 import com.alsaineybarry.tickets.domain.entities.QrCode;
 import com.alsaineybarry.tickets.domain.entities.Ticket;
 import com.alsaineybarry.tickets.domain.entities.TicketValidation;
-import com.alsaineybarry.tickets.domain.entities.TicketValidationMethod;
+import com.alsaineybarry.tickets.domain.enums.TicketValidationMethodEnum;
 import com.alsaineybarry.tickets.domain.enums.QrCodeStatusEnum;
 import com.alsaineybarry.tickets.domain.enums.TicketValidationStatusEnum;
 import com.alsaineybarry.tickets.exceptions.QrCodeNotFoundException;
@@ -37,22 +37,22 @@ public class TicketValidationServiceImpl implements TicketValidationService {
 
         Ticket ticket = qrCode.getTicket();
 
-        return validateTicket(ticket, TicketValidationMethod.QR_SCAN);
+        return validateTicket(ticket, TicketValidationMethodEnum.QR_SCAN);
     }
 
     private TicketValidation validateTicket(Ticket ticket,
-                                            TicketValidationMethod ticketValidationMethod) {
+                                            TicketValidationMethodEnum ticketValidationMethod) {
         TicketValidation ticketValidation = new TicketValidation();
         ticketValidation.setTicket(ticket);
         ticketValidation.setValidationMethod(ticketValidationMethod);
 
         TicketValidationStatusEnum ticketValidationStatus = ticket.getValidations().stream()
-                .filter(v -> TicketValidationStatusEnum.VALID.equals(v.getStatus()))
+                .filter(v -> TicketValidationStatusEnum.VALID.equals(v.getValidationStatus()))
                 .findFirst()
                 .map(v -> TicketValidationStatusEnum.INVALID)
                 .orElse(TicketValidationStatusEnum.VALID);
 
-        ticketValidation.setStatus(ticketValidationStatus);
+        ticketValidation.setValidationStatus(ticketValidationStatus);
 
         return ticketValidationRepository.save(ticketValidation);
     }
@@ -61,6 +61,6 @@ public class TicketValidationServiceImpl implements TicketValidationService {
     public TicketValidation validateTicketManually(UUID ticketId) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(TicketNotFoundException::new);
-        return validateTicket(ticket, TicketValidationMethod.MANUAL);
+        return validateTicket(ticket, TicketValidationMethodEnum.MANUAL);
     }
 }

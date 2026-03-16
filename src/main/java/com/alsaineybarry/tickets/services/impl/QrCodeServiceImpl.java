@@ -42,7 +42,7 @@ public class QrCodeServiceImpl implements QrCodeService {
             QrCode qrCode = new QrCode();
             qrCode.setId(uniqueId);
             qrCode.setStatus(QrCodeStatusEnum.ACTIVE);
-            qrCode.setValue(qrCodeImage);
+            qrCode.setCodeValue(qrCodeImage);
             qrCode.setTicket(ticket);
 
             return qrCodeRepository.saveAndFlush(qrCode);
@@ -58,7 +58,7 @@ public class QrCodeServiceImpl implements QrCodeService {
                 .orElseThrow(QrCodeNotFoundException::new);
 
         try {
-            return Base64.getDecoder().decode(qrCode.getValue());
+            return Base64.getDecoder().decode(qrCode.getCodeValue());
         } catch(IllegalArgumentException ex) {
             log.error("Invalid base64 QR Code for ticket ID: {}", ticketId, ex);
             throw new QrCodeNotFoundException();

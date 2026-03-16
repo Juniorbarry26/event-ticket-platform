@@ -3,7 +3,7 @@ package com.alsaineybarry.tickets.services.impl;
 import com.alsaineybarry.tickets.domain.entities.Ticket;
 import com.alsaineybarry.tickets.domain.entities.TicketType;
 import com.alsaineybarry.tickets.domain.entities.User;
-import com.alsaineybarry.tickets.domain.enums.TicketStatusEnum;
+import com.alsaineybarry.tickets.domain.enums.TIcketStatusEnum;
 import com.alsaineybarry.tickets.exceptions.TicketTypeNotFoundException;
 import com.alsaineybarry.tickets.exceptions.TicketsSoldOutException;
 import com.alsaineybarry.tickets.exceptions.UserNotFoundException;
@@ -46,7 +46,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         }
 
         Ticket ticket = new Ticket();
-        ticket.setStatus(TicketStatusEnum.PURCHASED);
+        ticket.setStatus(TIcketStatusEnum.PURCHASED);
         ticket.setTicketType(ticketType);
         ticket.setPurchaser(user);
 
