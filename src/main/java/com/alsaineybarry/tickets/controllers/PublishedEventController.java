@@ -16,18 +16,28 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping(path = "/api/v1/published-events")
 @RequiredArgsConstructor
+@Tag(name = "Published Events", description = "Public APIs for browsing published events")
 public class PublishedEventController {
 
     private final EventService eventService;
     private final EventMapper eventMapper;
 
     @GetMapping
+    @Operation(summary = "List published events", description = "Retrieves a paginated list of published events with optional search functionality")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Events retrieved successfully")
+    })
     public ResponseEntity<Page<ListPublishedEventResponseDto>> listPublishedEvents(
-            @RequestParam(required = false) String q,
+            @Parameter(description = "Search query for filtering events") @RequestParam(required = false) String q,
             Pageable pageable) {
 
         Page<Event> events;
@@ -43,8 +53,13 @@ public class PublishedEventController {
     }
 
     @GetMapping(path = "/{eventId}")
+    @Operation(summary = "Get published event details", description = "Retrieves detailed information about a specific published event")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Event details retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Event not found")
+    })
     public ResponseEntity<GetPublishedEventDetailsResponseDto> getPublishedEventDetails(
-            @PathVariable UUID eventId
+            @Parameter(description = "Event ID", required = true) @PathVariable UUID eventId
     ) {
         return eventService.getPublishedEvent(eventId)
                 .map(eventMapper::toGetPublishedEventDetailsResponseDto)
