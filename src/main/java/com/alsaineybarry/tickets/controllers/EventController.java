@@ -23,18 +23,32 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import static com.alsaineybarry.tickets.util.JwtUtil.parseUserId;
 
 @RestController
 @RequestMapping(path = "/api/v1/events")
 @RequiredArgsConstructor
+@Tag(name = "Event Management", description = "APIs for managing events by organizers")
+@SecurityRequirement(name = "bearerAuth")
 public class EventController {
 
     private final EventMapper eventMapper;
     private final EventService eventService;
 
     @PostMapping
+    @Operation(summary = "Create a new event", description = "Creates a new event for the authenticated organizer")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Event created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
     public ResponseEntity<CreateEventResponseDto> createEvent(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateEventRequestDto createEventRequestDto) {
@@ -47,9 +61,17 @@ public class EventController {
     }
 
     @PutMapping(path = "/{eventId}")
+    @Operation(summary = "Update an existing event", description = "Updates event details for the authenticated organizer")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Event updated successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "Event not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied")
+    })
     public ResponseEntity<UpdateEventResponseDto> updateEvent(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable UUID eventId,
+            @Parameter(description = "Event ID", required = true) @PathVariable UUID eventId,
             @Valid @RequestBody UpdateEventRequestDto updateEventRequestDto) {
         UpdateEventRequest updateEventRequest = eventMapper.fromDto(updateEventRequestDto);
         UUID userId = parseUserId(jwt);
@@ -65,6 +87,11 @@ public class EventController {
     }
 
     @GetMapping
+    @Operation(summary = "List events for organizer", description = "Retrieves a paginated list of events for the authenticated organizer")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Events retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
     public ResponseEntity<Page<ListEventResponseDto>> listEvents(
             @AuthenticationPrincipal Jwt jwt, Pageable pageable
     ) {
@@ -76,9 +103,16 @@ public class EventController {
     }
 
     @GetMapping(path = "/{eventId}")
+    @Operation(summary = "Get event details", description = "Retrieves detailed information about a specific event for the organizer")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Event details retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "Event not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied")
+    })
     public ResponseEntity<GetEventDetailsResponseDto> getEvent(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable UUID eventId
+            @Parameter(description = "Event ID", required = true) @PathVariable UUID eventId
     ) {
         UUID userId = parseUserId(jwt);
         return eventService.getEventForOrganizer(userId, eventId)
@@ -88,9 +122,16 @@ public class EventController {
     }
 
     @DeleteMapping(path = "/{eventId}")
+    @Operation(summary = "Delete an event", description = "Deletes an event for the authenticated organizer")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Event deleted successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "Event not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied")
+    })
     public ResponseEntity<Void> deleteEvent(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable UUID eventId
+            @Parameter(description = "Event ID", required = true) @PathVariable UUID eventId
     ) {
         UUID userId = parseUserId(jwt);
         eventService.deleteEventForOrganizer(userId, eventId);

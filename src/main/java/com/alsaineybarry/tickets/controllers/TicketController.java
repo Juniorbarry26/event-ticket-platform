@@ -21,12 +21,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import static com.alsaineybarry.tickets.util.JwtUtil.parseUserId;
 
 @RestController
 @RequestMapping(path = "/api/v1/tickets")
 @RequiredArgsConstructor
+@Tag(name = "Ticket Management", description = "APIs for managing user tickets")
+@SecurityRequirement(name = "bearerAuth")
 public class TicketController {
 
     private final TicketService ticketService;
@@ -34,6 +42,11 @@ public class TicketController {
     private final QrCodeService qrCodeService;
 
     @GetMapping
+    @Operation(summary = "List user tickets", description = "Retrieves a paginated list of tickets for the authenticated user")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Tickets retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
     public Page<ListTicketResponseDto> listTickets(
             @AuthenticationPrincipal Jwt jwt,
             Pageable pageable
@@ -45,9 +58,16 @@ public class TicketController {
     }
 
     @GetMapping(path = "/{ticketId}")
+    @Operation(summary = "Get ticket details", description = "Retrieves detailed information about a specific ticket for the authenticated user")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Ticket details retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "Ticket not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied")
+    })
     public ResponseEntity<GetTicketResponseDto> getTicket(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable UUID ticketId
+            @Parameter(description = "Ticket ID", required = true) @PathVariable UUID ticketId
     ) {
         return ticketService
                 .getTicketForUser(parseUserId(jwt), ticketId)
@@ -57,9 +77,16 @@ public class TicketController {
     }
 
     @GetMapping(path = "/{ticketId}/qr-codes")
+    @Operation(summary = "Get ticket QR code", description = "Generates and returns the QR code image for a specific ticket")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "QR code generated successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "Ticket not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied")
+    })
     public ResponseEntity<byte[]> getTicketQrCode(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable UUID ticketId
+            @Parameter(description = "Ticket ID", required = true) @PathVariable UUID ticketId
     ) {
         byte[] qrCodeImage = qrCodeService.getQrCodeImageForUserAndTicket(
                 parseUserId(jwt),
