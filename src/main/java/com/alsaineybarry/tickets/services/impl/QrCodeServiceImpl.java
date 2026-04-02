@@ -12,6 +12,8 @@ import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,20 +36,21 @@ public class QrCodeServiceImpl implements QrCodeService {
     private final QrCodeRepository qrCodeRepository;
 
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public QrCode generateQrCode(Ticket ticket) {
         try {
             UUID uniqueId = UUID.randomUUID();
-            String qrCodeImage = generateQrCodeImage(uniqueId);
+            // Store just the UUID, generate image on demand
+            String qrCodeId = uniqueId.toString();
 
             QrCode qrCode = new QrCode();
-            qrCode.setId(uniqueId);
             qrCode.setStatus(QrCodeStatusEnum.ACTIVE);
-            qrCode.setCodeValue(qrCodeImage);
+            qrCode.setCodeValue(qrCodeId.getBytes());
             qrCode.setTicket(ticket);
 
             return qrCodeRepository.saveAndFlush(qrCode);
 
-        } catch(IOException | WriterException ex) {
+        } catch(Exception ex) {
             throw new QrCodeGenerationException("Failed to generate QR Code", ex);
         }
     }
@@ -58,8 +61,10 @@ public class QrCodeServiceImpl implements QrCodeService {
                 .orElseThrow(QrCodeNotFoundException::new);
 
         try {
-            return Base64.getDecoder().decode(qrCode.getCodeValue());
-        } catch(IllegalArgumentException ex) {
+            String qrCodeId = new String(qrCode.getCodeValue());
+            String base64Image = generateQrCodeImage(UUID.fromString(qrCodeId));
+            return Base64.getDecoder().decode(base64Image);
+        } catch(Exception ex) {
             log.error("Invalid base64 QR Code for ticket ID: {}", ticketId, ex);
             throw new QrCodeNotFoundException();
         }
