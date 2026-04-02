@@ -13,6 +13,8 @@ import com.alsaineybarry.tickets.repositories.UserRepository;
 import com.alsaineybarry.tickets.services.QrCodeService;
 import com.alsaineybarry.tickets.services.TicketTypeService;
 import jakarta.transaction.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         ticket.setStatus(TIcketStatusEnum.PURCHASED);
         ticket.setTicketType(ticketType);
         ticket.setPurchaser(user);
+        ticket.setPurchaseDate(LocalDateTime.now());
 
         Ticket savedTicket = ticketRepository.save(ticket);
         qrCodeService.generateQrCode(savedTicket);
