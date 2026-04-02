@@ -4,42 +4,41 @@ import com.alsaineybarry.tickets.domain.dtos.TicketValidationRequestDto;
 import com.alsaineybarry.tickets.domain.dtos.TicketValidationResponseDto;
 import com.alsaineybarry.tickets.domain.entities.TicketValidation;
 import com.alsaineybarry.tickets.domain.entities.TicketValidationMethod;
+import com.alsaineybarry.tickets.domain.entities.User;
 import com.alsaineybarry.tickets.mappers.TicketValidationMapper;
 import com.alsaineybarry.tickets.services.TicketValidationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = "/api/v1/ticket-validations")
+@RequestMapping("/api/v1/ticket-validations")
 @RequiredArgsConstructor
-@Tag(name = "Ticket Validation", description = "APIs for validating tickets at events")
+@Tag(name = "Ticket Validation", description = "Endpoints for ticket validation at events")
 public class TicketValidationController {
 
     private final TicketValidationService ticketValidationService;
     private final TicketValidationMapper ticketValidationMapper;
 
+    @Operation(
+            summary = "Validate a ticket",
+            description = "Validates a ticket using either manual entry or QR code scanning. Only organizers can validate tickets."
+    )
     @PostMapping
-    @Operation(summary = "Validate a ticket", description = "Validates a ticket using either manual entry or QR code scanning")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Ticket validated successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid validation request"),
-        @ApiResponse(responseCode = "404", description = "Ticket not found")
-    })
+    @PreAuthorize("hasRole('ROLE_ORGANIZER')")
     public ResponseEntity<TicketValidationResponseDto> validateTicket(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Ticket validation request containing method and ticket ID")
-            @RequestBody TicketValidationRequestDto ticketValidationRequestDto
-    ){
+            @Valid @RequestBody TicketValidationRequestDto ticketValidationRequestDto,
+            @AuthenticationPrincipal User user) {
+        
         TicketValidationMethod method = ticketValidationRequestDto.getMethod();
         TicketValidation ticketValidation;
-        if(TicketValidationMethod.MANUAL.equals(method)) {
+        
+        if (TicketValidationMethod.MANUAL.equals(method)) {
             ticketValidation = ticketValidationService.validateTicketManually(
                     ticketValidationRequestDto.getId());
         } else {
@@ -47,9 +46,9 @@ public class TicketValidationController {
                     ticketValidationRequestDto.getId()
             );
         }
+        
         return ResponseEntity.ok(
                 ticketValidationMapper.toTicketValidationResponseDto(ticketValidation)
         );
     }
-
 }
