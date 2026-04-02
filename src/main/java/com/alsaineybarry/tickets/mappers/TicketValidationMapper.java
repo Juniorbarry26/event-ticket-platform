@@ -10,6 +10,9 @@ import org.mapstruct.ReportingPolicy;
 public interface TicketValidationMapper {
 
     @Mapping(target = "ticketId", source = "ticket.id")
+    @Mapping(target = "userEmail", source = "ticket.purchaser.email")
+    @Mapping(target = "userName", source = "ticket.purchaser.name")
+    @Mapping(target = "validatedAt", source = "createdAt")
     TicketValidationResponseDto toTicketValidationResponseDto(TicketValidation ticketValidation);
 
 }
