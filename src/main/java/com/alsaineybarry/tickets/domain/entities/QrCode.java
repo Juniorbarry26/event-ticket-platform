@@ -32,8 +32,8 @@ public class QrCode {
     @Enumerated(EnumType.STRING)
     private QrCodeStatusEnum status;
 
-    @Column(name = "code_value", nullable = false)
-    private String codeValue;
+    @Column(name = "code_value", nullable = false, columnDefinition = "BYTEA")
+    private byte[] codeValue;
 
     @Override
     public boolean equals(Object o) {
