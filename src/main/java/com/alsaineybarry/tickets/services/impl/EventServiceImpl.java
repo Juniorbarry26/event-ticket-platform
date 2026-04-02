@@ -2,9 +2,11 @@ package com.alsaineybarry.tickets.services.impl;
 
 
 import com.alsaineybarry.tickets.domain.entities.Event;
+import com.alsaineybarry.tickets.domain.entities.Role;
 import com.alsaineybarry.tickets.domain.entities.TicketType;
 import com.alsaineybarry.tickets.domain.entities.User;
 import com.alsaineybarry.tickets.domain.enums.EventStatusEnum;
+import com.alsaineybarry.tickets.domain.enums.RoleEnum;
 import com.alsaineybarry.tickets.domain.requests.CreateEventRequest;
 import com.alsaineybarry.tickets.domain.requests.UpdateEventRequest;
 import com.alsaineybarry.tickets.domain.requests.UpdateTicketTypeRequest;
@@ -13,6 +15,7 @@ import com.alsaineybarry.tickets.exceptions.EventUpdateException;
 import com.alsaineybarry.tickets.exceptions.TicketTypeNotFoundException;
 import com.alsaineybarry.tickets.exceptions.UserNotFoundException;
 import com.alsaineybarry.tickets.repositories.EventRepository;
+import com.alsaineybarry.tickets.repositories.RoleRepository;
 import com.alsaineybarry.tickets.repositories.UserRepository;
 import com.alsaineybarry.tickets.services.EventService;
 import jakarta.transaction.Transactional;
@@ -35,6 +38,7 @@ public class EventServiceImpl implements EventService {
 
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
+    private final RoleRepository roleRepository;
 
     @Override
     @Transactional
@@ -43,6 +47,14 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new UserNotFoundException(
                         String.format("User with ID '%s' not found", organizerId))
                 );
+
+        // Automatically upgrade user role to ORGANIZER if they're currently a USER
+        if (organizer.getRole().getName() == RoleEnum.USER) {
+            Role organizerRole = roleRepository.findByName(RoleEnum.ORGANIZER)
+                    .orElseThrow(() -> new RuntimeException("ORGANIZER role not found"));
+            organizer.setRole(organizerRole);
+            userRepository.save(organizer);
+        }
 
         Event eventToCreate = new Event();
 
