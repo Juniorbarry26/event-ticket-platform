@@ -1,0 +1,88 @@
+package com.alsaineybarry.tickets.controllers;
+
+import com.alsaineybarry.tickets.domain.entities.User;
+import com.alsaineybarry.tickets.domain.entities.Event;
+import com.alsaineybarry.tickets.services.UserAttendingEventsService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/user-attending-events")
+@RequiredArgsConstructor
+@Tag(name = "User Attending Events", description = "Endpoints for managing user event attendance data")
+public class UserAttendingEventsController {
+
+    private final UserAttendingEventsService userAttendingEventsService;
+
+    @Operation(
+            summary = "Get all users attending a specific event",
+            description = "Returns a list of users who are attending the specified event"
+    )
+    @GetMapping("/events/{eventId}/attendees")
+    @PreAuthorize("hasRole('ROLE_ORGANIZER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<List<User>> getUsersAttendingEvent(@PathVariable UUID eventId) {
+        List<User> attendees = userAttendingEventsService.getUsersAttendingEvent(eventId);
+        return ResponseEntity.ok(attendees);
+    }
+
+    @Operation(
+            summary = "Get all events attended by a specific user",
+            description = "Returns a list of events that the specified user is attending"
+    )
+    @GetMapping("/users/{userId}/events")
+    @PreAuthorize("hasRole('ROLE_ORGANIZER') or hasRole('ROLE_ADMIN') or #userId == authentication.principal.id")
+    public ResponseEntity<List<Event>> getEventsAttendedByUser(@PathVariable UUID userId) {
+        List<Event> events = userAttendingEventsService.getEventsAttendedByUser(userId);
+        return ResponseEntity.ok(events);
+    }
+
+    @Operation(
+            summary = "Get attendee count for a specific event",
+            description = "Returns the total number of users attending the specified event"
+    )
+    @GetMapping("/events/{eventId}/attendees/count")
+    @PreAuthorize("hasRole('ROLE_ORGANIZER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Long> getAttendeeCountForEvent(@PathVariable UUID eventId) {
+        Long count = userAttendingEventsService.getAttendeeCountForEvent(eventId);
+        return ResponseEntity.ok(count);
+    }
+
+    @Operation(
+            summary = "Get event count attended by a specific user",
+            description = "Returns the total number of events attended by the specified user"
+    )
+    @GetMapping("/users/{userId}/events/count")
+    @PreAuthorize("hasRole('ROLE_ORGANIZER') or hasRole('ROLE_ADMIN') or #userId == authentication.principal.id")
+    public ResponseEntity<Long> getEventCountAttendedByUser(@PathVariable UUID userId) {
+        Long count = userAttendingEventsService.getEventCountAttendedByUser(userId);
+        return ResponseEntity.ok(count);
+    }
+
+    @Operation(
+            summary = "Get current user's attended events",
+            description = "Returns a list of events that the authenticated user is attending"
+    )
+    @GetMapping("/my-events")
+    public ResponseEntity<List<Event>> getCurrentUserAttendedEvents(@AuthenticationPrincipal User user) {
+        List<Event> events = userAttendingEventsService.getEventsAttendedByUser(user.getId());
+        return ResponseEntity.ok(events);
+    }
+
+    @Operation(
+            summary = "Get current user's attended events count",
+            description = "Returns the total number of events attended by the authenticated user"
+    )
+    @GetMapping("/my-events/count")
+    public ResponseEntity<Long> getCurrentUserAttendedEventsCount(@AuthenticationPrincipal User user) {
+        Long count = userAttendingEventsService.getEventCountAttendedByUser(user.getId());
+        return ResponseEntity.ok(count);
+    }
+}
