@@ -75,6 +75,15 @@ public class Ticket {
     public int hashCode() {
         return Objects.hash(id, status, purchaseDate, createdAt, updatedAt);
     }
+
+    /**
+     * Checks if the ticket has been validated (checked in)
+     * @return true if the ticket has at least one VALID validation, false otherwise
+     */
+    public boolean isCheckedIn() {
+        return validations != null && validations.stream()
+                .anyMatch(validation -> validation.getValidationStatus() == TicketValidationStatusEnum.VALID);
+    }
 }
 
 

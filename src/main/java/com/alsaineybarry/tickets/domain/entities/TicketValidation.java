@@ -1,6 +1,6 @@
 package com.alsaineybarry.tickets.domain.entities;
 
-import com.alsaineybarry.tickets.domain.enums.TicketValidationMethodEnum;
+import com.alsaineybarry.tickets.domain.entities.TicketValidationMethod;
 import com.alsaineybarry.tickets.domain.enums.TicketValidationStatusEnum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -43,7 +43,7 @@ public class TicketValidation {
 
     @Column(name = "validation_method", nullable = false)
     @Enumerated(EnumType.STRING)
-    private TicketValidationMethodEnum validationMethod;
+    private TicketValidationMethod validationMethod;
 
 //    @Column(name = "validation_timestamp", nullable = false)
 //    private LocalDateTime validationTimestamp;

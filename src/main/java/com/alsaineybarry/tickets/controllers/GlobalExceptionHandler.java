@@ -84,6 +84,20 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorDto> handleRuntimeException(RuntimeException ex) {
+        log.error("Caught RuntimeException", ex);
+        ErrorDto errorDto = new ErrorDto();
+        
+        if (ex.getMessage() != null && ex.getMessage().contains("Email already exists")) {
+            errorDto.setError("Email already exists");
+            return new ResponseEntity<>(errorDto, HttpStatus.CONFLICT);
+        }
+        
+        errorDto.setError(ex.getMessage() != null ? ex.getMessage() : "Registration failed");
+        return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorDto> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException ex

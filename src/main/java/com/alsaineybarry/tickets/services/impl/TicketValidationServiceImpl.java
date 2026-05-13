@@ -3,7 +3,7 @@ package com.alsaineybarry.tickets.services.impl;
 import com.alsaineybarry.tickets.domain.entities.QrCode;
 import com.alsaineybarry.tickets.domain.entities.Ticket;
 import com.alsaineybarry.tickets.domain.entities.TicketValidation;
-import com.alsaineybarry.tickets.domain.enums.TicketValidationMethodEnum;
+import com.alsaineybarry.tickets.domain.entities.TicketValidationMethod;
 import com.alsaineybarry.tickets.domain.enums.QrCodeStatusEnum;
 import com.alsaineybarry.tickets.domain.enums.TicketValidationStatusEnum;
 import com.alsaineybarry.tickets.exceptions.QrCodeNotFoundException;
@@ -37,11 +37,11 @@ public class TicketValidationServiceImpl implements TicketValidationService {
 
         Ticket ticket = qrCode.getTicket();
 
-        return validateTicket(ticket, TicketValidationMethodEnum.QR_SCAN);
+        return validateTicket(ticket, TicketValidationMethod.QR_SCAN);
     }
 
     private TicketValidation validateTicket(Ticket ticket,
-                                            TicketValidationMethodEnum ticketValidationMethod) {
+                                            TicketValidationMethod ticketValidationMethod) {
         TicketValidation ticketValidation = new TicketValidation();
         ticketValidation.setTicket(ticket);
         ticketValidation.setValidationMethod(ticketValidationMethod);
@@ -61,6 +61,6 @@ public class TicketValidationServiceImpl implements TicketValidationService {
     public TicketValidation validateTicketManually(UUID ticketId) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(TicketNotFoundException::new);
-        return validateTicket(ticket, TicketValidationMethodEnum.MANUAL);
+        return validateTicket(ticket, TicketValidationMethod.MANUAL);
     }
 }

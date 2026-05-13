@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: ${SPRING_APPLICATION_NAME:tickets}
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+
+logging:
+  level:
+    com.alsaineybarry.tickets: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

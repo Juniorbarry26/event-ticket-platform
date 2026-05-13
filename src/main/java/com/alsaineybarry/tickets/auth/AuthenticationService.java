@@ -27,6 +27,11 @@ public class AuthenticationService {
 
     @Transactional
     public AuthenticationResponse register(RegistrationRequest request, String roleString) {
+        // Check if email already exists
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already exists: " + request.getEmail());
+        }
+
         RoleEnum roleEnum = RoleEnum.fromString(roleString);
         Role role = roleRepository.findByName(roleEnum)
                 .orElseThrow(() -> new RuntimeException("Role not found: " + roleString));
