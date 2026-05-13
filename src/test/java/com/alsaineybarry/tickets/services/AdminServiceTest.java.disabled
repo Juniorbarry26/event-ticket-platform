@@ -1,0 +1,364 @@
+package com.alsaineybarry.tickets.services;
+
+import com.alsaineybarry.tickets.domain.dtos.AdminOrganizerDto;
+import com.alsaineybarry.tickets.domain.dtos.AdminOrganizerStatisticsDto;
+import com.alsaineybarry.tickets.domain.dtos.AdminUserManagementDto;
+import com.alsaineybarry.tickets.domain.entities.*;
+import com.alsaineybarry.tickets.domain.enums.EventStatusEnum;
+import com.alsaineybarry.tickets.domain.enums.RoleEnum;
+import com.alsaineybarry.tickets.domain.enums.TIcketStatusEnum;
+import com.alsaineybarry.tickets.repositories.EventRepository;
+import com.alsaineybarry.tickets.repositories.TicketRepository;
+import com.alsaineybarry.tickets.repositories.UserRepository;
+import com.alsaineybarry.tickets.services.impl.AdminServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class AdminServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+    
+    @Mock
+    private EventRepository eventRepository;
+    
+    @Mock
+    private TicketRepository ticketRepository;
+    
+    private AdminService adminService;
+    
+    private UUID organizerId;
+    private UUID userId;
+    private UUID eventId;
+    private UUID ticketId;
+    private UUID ticketTypeId;
+    
+    private User organizer;
+    private User regularUser;
+    private User admin;
+    private Event event;
+    private TicketType ticketType;
+    private Ticket ticket;
+    private Role organizerRole;
+    private Role userRole;
+    
+    @BeforeEach
+    void setUp() {
+        adminService = new AdminServiceImpl(userRepository, eventRepository, ticketRepository);
+        
+        organizerId = UUID.randomUUID();
+        userId = UUID.randomUUID();
+        eventId = UUID.randomUUID();
+        ticketId = UUID.randomUUID();
+        ticketTypeId = UUID.randomUUID();
+        
+        organizerRole = new Role();
+        organizerRole.setId(UUID.randomUUID());
+        organizerRole.setName(RoleEnum.ORGANIZER);
+        
+        userRole = new Role();
+        userRole.setId(UUID.randomUUID());
+        userRole.setName(RoleEnum.USER);
+        
+        organizer = User.builder()
+                .id(organizerId)
+                .name("Organizer")
+                .email("organizer@example.com")
+                .role(organizerRole)
+                .createdAt(LocalDateTime.now().minusDays(30))
+                .attendingEvents(new ArrayList<>())
+                .staffingEvents(new ArrayList<>())
+                .build();
+        
+        regularUser = User.builder()
+                .id(userId)
+                .name("Regular User")
+                .email("user@example.com")
+                .role(userRole)
+                .createdAt(LocalDateTime.now().minusDays(10))
+                .attendingEvents(new ArrayList<>())
+                .staffingEvents(new ArrayList<>())
+                .build();
+        
+        admin = User.builder()
+                .id(UUID.randomUUID())
+                .name("Admin")
+                .email("admin@example.com")
+                .role(Role.builder().id(UUID.randomUUID()).name(RoleEnum.ADMIN).build())
+                .build();
+        
+        event = Event.builder()
+                .id(eventId)
+                .name("Test Event")
+                .start(LocalDateTime.now().plusDays(1))
+                .end(LocalDateTime.now().plusDays(2))
+                .organizer(organizer)
+                .status(EventStatusEnum.PUBLISHED)
+                .build();
+        
+        ticketType = new TicketType();
+        ticketType.setId(ticketTypeId);
+        ticketType.setName("VIP Ticket");
+        ticketType.setPrice(100.0);
+        ticketType.setTotalAvailable(100);
+        ticketType.setEvent(event);
+        
+        ticket = Ticket.builder()
+                .id(ticketId)
+                .status(TIcketStatusEnum.PURCHASED)
+                .ticketType(ticketType)
+                .purchaser(regularUser)
+                .purchaseDate(LocalDateTime.now())
+                .build();
+    }
+    
+    @Test
+    void getAllOrganizers_ShouldReturnOrganizers() {
+        // Given
+        Page<User> organizers = new PageImpl<>(List.of(organizer));
+        when(userRepository.findByRole(eq(RoleEnum.ORGANIZER), any(Pageable.class)))
+                .thenReturn(organizers);
+        when(eventRepository.findByOrganizerId(eq(organizerId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(new ArrayList<>()));
+        
+        // When
+        Page<AdminOrganizerDto> result = adminService.getAllOrganizers(Pageable.unpaged());
+        
+        // Then
+        assertEquals(1, result.getContent().size());
+        AdminOrganizerDto organizerDto = result.getContent().get(0);
+        assertEquals(organizerId, organizerDto.getOrganizerId());
+        assertEquals("Organizer", organizerDto.getOrganizerName());
+        assertEquals("organizer@example.com", organizerDto.getOrganizerEmail());
+        assertTrue(organizerDto.getIsActive());
+    }
+    
+    @Test
+    void getOrganizerById_ShouldReturnOrganizer_WhenOrganizerExists() {
+        // Given
+        when(userRepository.findById(organizerId)).thenReturn(Optional.of(organizer));
+        when(eventRepository.findByOrganizerId(eq(organizerId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(event)));
+        when(ticketRepository.findByEventOrganizerIdAndEventId(eq(organizerId), eq(eventId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(ticket)));
+        
+        // When
+        AdminOrganizerDto result = adminService.getOrganizerById(organizerId);
+        
+        // Then
+        assertEquals(organizerId, result.getOrganizerId());
+        assertEquals("Organizer", result.getOrganizerName());
+        assertEquals("organizer@example.com", result.getOrganizerEmail());
+        assertEquals(1, result.getTotalEventsCreated());
+        assertEquals(1, result.getTotalTicketsSold());
+        assertEquals(100.0, result.getTotalRevenue());
+        assertEquals(100.0, result.getTotalProfit());
+        assertTrue(result.getIsActive());
+    }
+    
+    @Test
+    void getOrganizerById_ShouldThrowException_WhenOrganizerNotFound() {
+        // Given
+        when(userRepository.findById(organizerId)).thenReturn(Optional.empty());
+        
+        // When & Then
+        assertThrows(RuntimeException.class, () -> {
+            adminService.getOrganizerById(organizerId);
+        });
+    }
+    
+    @Test
+    void getOrganizerById_ShouldThrowException_WhenUserIsNotOrganizer() {
+        // Given
+        when(userRepository.findById(userId)).thenReturn(Optional.of(regularUser));
+        
+        // When & Then
+        assertThrows(RuntimeException.class, () -> {
+            adminService.getOrganizerById(userId);
+        });
+    }
+    
+    @Test
+    void getOrganizerStatistics_ShouldReturnStatistics() {
+        // Given
+        when(userRepository.countByRole(RoleEnum.ORGANIZER)).thenReturn(5);
+        when(userRepository.countByRoleAndCreatedAfter(eq(RoleEnum.ORGANIZER), any(LocalDateTime.class)))
+                .thenReturn(2);
+        when(userRepository.findByRole(eq(RoleEnum.ORGANIZER), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(organizer)));
+        when(eventRepository.findByOrganizerId(eq(organizerId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(event)));
+        when(ticketRepository.findByEventOrganizerIdAndEventId(eq(organizerId), eq(eventId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(ticket)));
+        
+        // When
+        AdminOrganizerStatisticsDto result = adminService.getOrganizerStatistics();
+        
+        // Then
+        assertEquals(5, result.getTotalOrganizers());
+        assertEquals(5, result.getActiveOrganizers());
+        assertEquals(2, result.getNewOrganizersThisMonth());
+        assertEquals(1, result.getTotalEventsCreated());
+        assertEquals(1, result.getTotalTicketsSold());
+        assertEquals(100.0, result.getTotalRevenue());
+        assertEquals(100.0, result.getTotalProfit());
+        assertNotNull(result.getLastUpdated());
+        assertEquals(1, result.getTopPerformingOrganizers().size());
+    }
+    
+    @Test
+    void getTopPerformingOrganizers_ShouldReturnTopOrganizers() {
+        // Given
+        when(userRepository.findTopPerformingOrganizers(eq(RoleEnum.ORGANIZER), any(Pageable.class)))
+                .thenReturn(List.of(organizer));
+        when(eventRepository.findByOrganizerId(eq(organizerId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(event)));
+        when(ticketRepository.findByEventOrganizerIdAndEventId(eq(organizerId), eq(eventId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(ticket)));
+        
+        // When
+        List<AdminOrganizerDto> result = adminService.getTopPerformingOrganizers(5);
+        
+        // Then
+        assertEquals(1, result.size());
+        assertEquals(organizerId, result.get(0).getOrganizerId());
+    }
+    
+    @Test
+    void getAllUsers_ShouldReturnAllUsers() {
+        // Given
+        Page<User> users = new PageImpl<>(List.of(organizer, regularUser));
+        when(userRepository.findAll(any(Pageable.class))).thenReturn(users);
+        
+        // When
+        Page<AdminUserManagementDto> result = adminService.getAllUsers(Pageable.unpaged());
+        
+        // Then
+        assertEquals(2, result.getContent().size());
+        AdminUserManagementDto userDto = result.getContent().get(0);
+        assertNotNull(userDto.getUserId());
+        assertNotNull(userDto.getName());
+        assertNotNull(userDto.getEmail());
+        assertNotNull(userDto.getRole());
+        assertTrue(userDto.getIsActive());
+        assertFalse(userDto.getIsBlocked());
+    }
+    
+    @Test
+    void getUserById_ShouldReturnUser_WhenUserExists() {
+        // Given
+        when(userRepository.findById(userId)).thenReturn(Optional.of(regularUser));
+        
+        // When
+        AdminUserManagementDto result = adminService.getUserById(userId);
+        
+        // Then
+        assertEquals(userId, result.getUserId());
+        assertEquals("Regular User", result.getName());
+        assertEquals("user@example.com", result.getEmail());
+        assertEquals("USER", result.getRole());
+        assertTrue(result.getIsActive());
+        assertFalse(result.getIsBlocked());
+    }
+    
+    @Test
+    void getUserById_ShouldThrowException_WhenUserNotFound() {
+        // Given
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        
+        // When & Then
+        assertThrows(RuntimeException.class, () -> {
+            adminService.getUserById(userId);
+        });
+    }
+    
+    @Test
+    void blockUser_ShouldThrowUnsupportedOperationException() {
+        // Given
+        when(userRepository.findById(userId)).thenReturn(Optional.of(regularUser));
+        
+        // When & Then
+        assertThrows(UnsupportedOperationException.class, () -> {
+            adminService.blockUser(userId);
+        });
+    }
+    
+    @Test
+    void unblockUser_ShouldThrowUnsupportedOperationException() {
+        // Given
+        when(userRepository.findById(userId)).thenReturn(Optional.of(regularUser));
+        
+        // When & Then
+        assertThrows(UnsupportedOperationException.class, () -> {
+            adminService.unblockUser(userId);
+        });
+    }
+    
+    @Test
+    void getTotalOrganizersCount_ShouldReturnCount() {
+        // Given
+        when(userRepository.countByRole(RoleEnum.ORGANIZER)).thenReturn(10);
+        
+        // When
+        Integer result = adminService.getTotalOrganizersCount();
+        
+        // Then
+        assertEquals(10, result);
+    }
+    
+    @Test
+    void getTotalUsersCount_ShouldReturnCount() {
+        // Given
+        when(userRepository.count()).thenReturn(100L);
+        
+        // When
+        Integer result = adminService.getTotalUsersCount();
+        
+        // Then
+        assertEquals(100, result);
+    }
+    
+    @Test
+    void getNewOrganizersThisMonth_ShouldReturnCount() {
+        // Given
+        when(userRepository.countByRoleAndCreatedAfter(eq(RoleEnum.ORGANIZER), any(LocalDateTime.class)))
+                .thenReturn(3);
+        
+        // When
+        Integer result = adminService.getNewOrganizersThisMonth();
+        
+        // Then
+        assertEquals(3, result);
+    }
+    
+    @Test
+    void getNewUsersThisMonth_ShouldReturnCount() {
+        // Given
+        when(userRepository.countByRoleAndCreatedAfter(eq(RoleEnum.USER), any(LocalDateTime.class)))
+                .thenReturn(7);
+        
+        // When
+        Integer result = adminService.getNewUsersThisMonth();
+        
+        // Then
+        assertEquals(7, result);
+    }
+}

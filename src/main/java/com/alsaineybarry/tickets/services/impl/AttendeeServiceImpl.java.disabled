@@ -1,0 +1,281 @@
+package com.alsaineybarry.tickets.services.impl;
+
+import com.alsaineybarry.tickets.domain.dtos.*;
+import com.alsaineybarry.tickets.services.AttendeeService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class AttendeeServiceImpl implements AttendeeService {
+
+    // Mock implementations for demonstration purposes
+    // In a real application, these would interact with repositories and actual data
+
+    // Note: Public events endpoints are handled by PublishedEventController
+
+    // Note: Basic ticket endpoints are handled by TicketController
+
+    // Note: Ticket purchase endpoint is handled by TicketTypeController
+
+    @Override
+    public byte[] downloadTicketPdf(UUID ticketId) {
+        // Mock implementation - would generate actual PDF
+        String pdfContent = "PDF Ticket Content for " + ticketId.toString();
+        return pdfContent.getBytes();
+    }
+
+    @Override
+    public AttendeeStatsDto getAttendeeStats() {
+        // Mock implementation - would calculate actual stats for authenticated user
+        return AttendeeStatsDto.builder()
+                .totalTickets(12)
+                .upcomingEvents(3)
+                .pastEvents(9)
+                .totalSpent(java.math.BigDecimal.valueOf(1850.00))
+                .averageTicketPrice(java.math.BigDecimal.valueOf(154.17))
+                .favoriteEventCategory("Music")
+                .lastEventAttended(LocalDateTime.now().minusMonths(1))
+                .nextUpcomingEvent(LocalDateTime.now().plusWeeks(2))
+                .build();
+    }
+
+    @Override
+    public Page<AttendeeEventDto> getUpcomingEvents(Pageable pageable) {
+        // Mock implementation - would fetch upcoming events for authenticated user
+        List<AttendeeEventDto> mockEvents = List.of(
+                AttendeeEventDto.builder()
+                        .eventId(UUID.randomUUID())
+                        .title("Summer Music Festival")
+                        .eventDate(LocalDateTime.now().plusMonths(2))
+                        .venue("Central Park Amphitheater")
+                        .ticketsOwned(2)
+                        .totalTickets(5000)
+                        .status("UPCOMING")
+                        .build()
+        );
+
+        return new PageImpl<>(mockEvents, pageable, mockEvents.size());
+    }
+
+    @Override
+    public Page<AttendeeEventDto> getPastEvents(Pageable pageable) {
+        // Mock implementation - would fetch past events for authenticated user
+        List<AttendeeEventDto> mockEvents = List.of(
+                AttendeeEventDto.builder()
+                        .eventId(UUID.randomUUID())
+                        .title("Spring Jazz Concert")
+                        .eventDate(LocalDateTime.now().minusMonths(1))
+                        .venue("Jazz Club")
+                        .ticketsOwned(1)
+                        .totalTickets(200)
+                        .status("COMPLETED")
+                        .attended(true)
+                        .build()
+        );
+
+        return new PageImpl<>(mockEvents, pageable, mockEvents.size());
+    }
+
+    @Override
+    public AttendeeEventDetailsDto getAttendeeEventDetails(UUID eventId) {
+        // Mock implementation - would fetch event details specific to authenticated user
+        return AttendeeEventDetailsDto.builder()
+                .eventId(eventId)
+                .title("Summer Music Festival")
+                .description("An amazing outdoor music festival")
+                .eventDate(LocalDateTime.now().plusMonths(2))
+                .venue("Central Park Amphitheater")
+                .address("123 Park Ave, New York, NY")
+                .organizerName("Music Events Inc.")
+                .ticketsOwned(2)
+                .ticketTypes(List.of(
+                        AttendeeEventDetailsDto.OwnedTicketType.builder()
+                                .ticketTypeName("VIP Pass")
+                                .quantity(2)
+                                .price(java.math.BigDecimal.valueOf(150.00))
+                                .build()
+                ))
+                .canTransfer(true)
+                .canRequestRefund(true)
+                .refundPolicy("Full refund available up to 7 days before event")
+                .build();
+    }
+
+    @Override
+    public Page<AttendeeTicketDto> getAllAttendeeTickets(Pageable pageable) {
+        // Mock implementation - would fetch all tickets for authenticated user
+        List<AttendeeTicketDto> mockTickets = List.of(
+                AttendeeTicketDto.builder()
+                        .ticketId(UUID.randomUUID())
+                        .eventId(UUID.randomUUID())
+                        .eventTitle("Summer Music Festival")
+                        .eventDate(LocalDateTime.now().plusMonths(2))
+                        .venue("Central Park Amphitheater")
+                        .ticketTypeName("VIP Pass")
+                        .price(java.math.BigDecimal.valueOf(150.00))
+                        .currency("USD")
+                        .status("ACTIVE")
+                        .purchaseDate(LocalDateTime.now().minusWeeks(1))
+                        .qrCodeUrl("https://example.com/qr/ticket1")
+                        .checkedIn(false)
+                        .build(),
+                AttendeeTicketDto.builder()
+                        .ticketId(UUID.randomUUID())
+                        .eventId(UUID.randomUUID())
+                        .eventTitle("Tech Conference 2024")
+                        .eventDate(LocalDateTime.now().plusMonths(1))
+                        .venue("Convention Center")
+                        .ticketTypeName("Standard Ticket")
+                        .price(java.math.BigDecimal.valueOf(299.00))
+                        .currency("USD")
+                        .status("ACTIVE")
+                        .purchaseDate(LocalDateTime.now().minusDays(3))
+                        .qrCodeUrl("https://example.com/qr/ticket2")
+                        .checkedIn(false)
+                        .build()
+        );
+
+        return new PageImpl<>(mockTickets, pageable, mockTickets.size());
+    }
+
+    @Override
+    @Transactional
+    public TicketTransferDto initiateTicketTransfer(UUID ticketId, TicketTransferRequestDto transferRequest) {
+        // Mock implementation - would initiate actual transfer process
+        return TicketTransferDto.builder()
+                .transferId(UUID.randomUUID())
+                .ticketId(ticketId)
+                .fromUserId(UUID.randomUUID()) // Current user
+                .toUserEmail(transferRequest.getToUserEmail())
+                .status("PENDING")
+                .initiatedAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusDays(3))
+                .build();
+    }
+
+    @Override
+    public Page<TicketTransferDto> getTicketTransferHistory(Pageable pageable) {
+        // Mock implementation - would fetch transfer history for authenticated user
+        List<TicketTransferDto> mockTransfers = List.of(
+                TicketTransferDto.builder()
+                        .transferId(UUID.randomUUID())
+                        .ticketId(UUID.randomUUID())
+                        .fromUserId(UUID.randomUUID())
+                        .toUserEmail("friend@example.com")
+                        .status("COMPLETED")
+                        .initiatedAt(LocalDateTime.now().minusWeeks(2))
+                        .completedAt(LocalDateTime.now().minusWeeks(1))
+                        .build()
+        );
+
+        return new PageImpl<>(mockTransfers, pageable, mockTransfers.size());
+    }
+
+    @Override
+    @Transactional
+    public RefundRequestDto requestRefund(UUID ticketId, RefundRequestDto refundRequest) {
+        // Mock implementation - would submit actual refund request
+        return RefundRequestDto.builder()
+                .refundId(UUID.randomUUID())
+                .ticketId(ticketId)
+                .reason(refundRequest.getReason())
+                .status("PENDING")
+                .requestedAt(LocalDateTime.now())
+                .refundAmount(java.math.BigDecimal.valueOf(150.00))
+                .currency("USD")
+                .build();
+    }
+
+    @Override
+    public Page<RefundRequestDto> getRefundRequests(Pageable pageable) {
+        // Mock implementation - would fetch refund requests for authenticated user
+        List<RefundRequestDto> mockRefunds = List.of(
+                RefundRequestDto.builder()
+                        .refundId(UUID.randomUUID())
+                        .ticketId(UUID.randomUUID())
+                        .reason("Schedule conflict")
+                        .status("APPROVED")
+                        .requestedAt(LocalDateTime.now().minusWeeks(1))
+                        .processedAt(LocalDateTime.now().minusDays(5))
+                        .refundAmount(java.math.BigDecimal.valueOf(75.00))
+                        .currency("USD")
+                        .build()
+        );
+
+        return new PageImpl<>(mockRefunds, pageable, mockRefunds.size());
+    }
+
+    @Override
+    public EventRefundPolicyDto getEventRefundPolicy(UUID eventId) {
+        // Mock implementation - would fetch actual refund policy for event
+        return EventRefundPolicyDto.builder()
+                .eventId(eventId)
+                .refundPolicy("Full refund available up to 7 days before event date. 50% refund between 7 days and 48 hours before event. No refunds within 48 hours of event.")
+                .refundWindowDays(7)
+                .partialRefundWindowDays(2)
+                .refundFeePercentage(java.math.BigDecimal.valueOf(5.0))
+                .processingFee(java.math.BigDecimal.valueOf(2.50))
+                .currency("USD")
+                .build();
+    }
+
+    @Override
+    public AttendeeProfileDto getAttendeeProfile() {
+        // Mock implementation - would fetch profile for authenticated user
+        return AttendeeProfileDto.builder()
+                .userId(UUID.randomUUID())
+                .firstName("John")
+                .lastName("Doe")
+                .email("john.doe@example.com")
+                .phone("+1-555-0123")
+                .dateOfBirth(LocalDateTime.of(1990, 5, 15, 0, 0))
+                .address("123 Main St, New York, NY 10001")
+                .profileImageUrl("https://example.com/profile.jpg")
+                .verified(true)
+                .createdAt(LocalDateTime.now().minusYears(1))
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public AttendeeProfileDto updateAttendeeProfile(AttendeeProfileDto profile) {
+        // Mock implementation - would update actual profile
+        return profile;
+    }
+
+    @Override
+    public NotificationPreferencesDto getNotificationPreferences() {
+        // Mock implementation - would fetch notification preferences for authenticated user
+        return NotificationPreferencesDto.builder()
+                .emailNotifications(true)
+                .smsNotifications(false)
+                .pushNotifications(true)
+                .eventReminders(true)
+                .ticketUpdates(true)
+                .refundUpdates(true)
+                .transferUpdates(true)
+                .promotionalEmails(false)
+                .newsletterSubscription(true)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public NotificationPreferencesDto updateNotificationPreferences(NotificationPreferencesDto preferences) {
+        // Mock implementation - would update actual preferences
+        return preferences;
+    }
+
+    // Note: Ticket validation endpoint is handled by TicketValidationController
+}
