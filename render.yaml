@@ -1,0 +1,40 @@
+services:
+  # PostgreSQL Database
+  - type: postgres
+    name: event-ticket-platform-db
+    databaseName: event_ticket_platform
+    plan: free
+    ipAllowList: []
+
+  # Spring Boot Application
+  - type: web
+    name: event-ticket-platform-api
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    
+    # Environment variables
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: event-ticket-platform-db
+          property: connectionString
+      
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      
+      - key: SERVER_PORT
+        value: 8080
+      
+      - key: JAVA_OPTS
+        value: "-Xmx512m -Xms256m"
+      
+      - key: FRONTEND_URL
+        value: https://your-frontend-url.onrender.com
+
+    # Health check
+    healthCheckPath: /actuator/health
+
+    # Auto-deploy on git push
+    autoDeploy: true

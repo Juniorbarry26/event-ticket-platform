@@ -1,6 +1,7 @@
 package com.alsaineybarry.tickets.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -18,6 +19,9 @@ import java.util.Arrays;
 @Configuration
 public class BeansConfig {
 
+    @Value("${FRONTEND_URL:http://localhost:5173}")
+    private String frontendUrl;
+
     @Bean
     public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
@@ -33,8 +37,9 @@ public class BeansConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Specifically allow frontend development server
+        // Allow frontend URL from environment variable
         configuration.setAllowedOrigins(Arrays.asList(
+            frontendUrl,
             "http://localhost:5173",
             "http://127.0.0.1:5173"
         ));
