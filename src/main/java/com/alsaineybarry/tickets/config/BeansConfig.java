@@ -19,7 +19,7 @@ import java.util.Arrays;
 @Configuration
 public class BeansConfig {
 
-    @Value("${FRONTEND_URL:http://localhost:5173}")
+    @Value("${frontend.url}")
     private String frontendUrl;
 
     @Bean
@@ -39,9 +39,7 @@ public class BeansConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // Allow frontend URL from environment variable
         configuration.setAllowedOrigins(Arrays.asList(
-            frontendUrl,
-            "http://localhost:5173",
-            "http://127.0.0.1:5173"
+            frontendUrl
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList(
