@@ -37,9 +37,11 @@ public class BeansConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow frontend URL from environment variable
-        configuration.setAllowedOrigins(Arrays.asList(
-            frontendUrl
+        // Allow frontend URL from environment variable (production) and development URL
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            frontendUrl,
+            "http://localhost:5173",
+            "https://event-ticket-ui.vercel.app"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList(

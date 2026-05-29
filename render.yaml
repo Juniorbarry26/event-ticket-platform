@@ -32,6 +32,12 @@ services:
       
       - key: FRONTEND_URL
         value: https://event-ticket-ui.vercel.app
+      
+      - key: OAUTH2_ISSUER_URI
+        value: https://your-keycloak-url.onrender.com/realms/event-ticket-platform
+      
+      - key: OAUTH2_JWK_SET_URI
+        value: https://your-keycloak-url.onrender.com/realms/event-ticket-platform/protocol/openid-connect/certs
 
     # Health check
     healthCheckPath: /actuator/health
