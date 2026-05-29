@@ -31,7 +31,7 @@ services:
         value: "-Xmx512m -Xms256m"
       
       - key: FRONTEND_URL
-        value: https://your-frontend-url.onrender.com
+        value: https://event-ticket-ui.vercel.app
 
     # Health check
     healthCheckPath: /actuator/health
