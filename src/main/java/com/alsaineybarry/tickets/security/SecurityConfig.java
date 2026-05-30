@@ -35,6 +35,8 @@ public class SecurityConfig {
                 .requestMatchers("/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-resources/**", "/configuration/ui", "/configuration/security").permitAll()
                 .requestMatchers("/swagger-ui/**", "/webjars/**", "/swagger-ui.html").permitAll()
+                // Health check endpoint
+                .requestMatchers("/actuator/health").permitAll()
                 // Public templates + static resources
                 .requestMatchers("/", "/index", "/payments/**", "/css/**", "/js/**", "/images/**").permitAll()
                 // Require authentication for protected endpoints
@@ -46,7 +48,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .cors(withDefaults())
-            .csrf(csrf -> csrf.disable()) // For development only - enable CSRF in production
+            .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
             .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
